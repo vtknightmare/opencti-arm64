@@ -355,7 +355,7 @@ services:
       - CONNECTOR_LOG_LEVEL=info  # Changed from error to info for better debugging
       - CONNECTOR_DURATION_PERIOD=PT30M
       - ALIENVAULT_BASE_URL=https://otx.alienvault.com
-      - ALIENVAULT_API_KEY=PLEASEGETAWORKINGONEFROMOTXALIENVAULT
+      - ALIENVAULT_API_KEY=8d1e174c6d435e711efac859114e84da8ff75430a709961d8594cfe66ddc518a
       - ALIENVAULT_TLP=White
       - ALIENVAULT_CREATE_OBSERVABLES=true
       - ALIENVAULT_CREATE_INDICATORS=true
@@ -381,6 +381,82 @@ services:
       opencti:
         condition: service_healthy
     restart: always
+
+  connector-abuseipdb-ipblacklist:
+    image: opencti/connector-abuseipdb-ipblacklist:latest
+    networks:
+      - opencti_network
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - CONNECTOR_ID=e9be5e3b-c1d5-4a88-8500-6c75d0ac84db # Valid UUIDv4
+      - "CONNECTOR_NAME=AbuseIPDB IP Blacklist"
+      - CONNECTOR_SCOPE=abuseipdb
+      - CONNECTOR_LOG_LEVEL=error
+      - ABUSEIPDB_URL=https://api.abuseipdb.com/api/v2/blacklist
+      - ABUSEIPDB_API_KEY=969f5a5da7e0a249472b66ddcf3894283a157daec8d2578301a0fa218b2baeacce8c2e6d71527e83
+      - ABUSEIPDB_SCORE=100
+      - ABUSEIPDB_LIMIT=10000000
+      - ABUSEIPDB_INTERVAL=1 #Day
+    restart: always
+
+  connector-malpedia:
+    image: opencti/connector-malpedia:rolling
+    networks:
+      - opencti_network
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - CONNECTOR_ID=f575325a-5799-48c4-9ef4-af53775b2150
+      - MALPEDIA_AUTH_KEY="" #Empty key only fetches TLP:WHITE information"
+      - CONNECTOR_NAME=Malpedia
+      - CONNECTOR_SCOPE=malpedia
+      - CONNECTOR_LOG_LEVEL=error
+      - CONNECTOR_EXPOSE_METRICS=false
+      - MALPEDIA_INTERVAL_SEC=86400 # Run once every day
+      - MALPEDIA_IMPORT_INTRUSION_SETS=true
+      - MALPEDIA_IMPORT_YARA=true
+      - MALPEDIA_CREATE_INDICATORS=true
+      - MALPEDIA_CREATE_OBSERVABLES=true
+    restart: always
+
+  connector-malwarebazaar-recent-additions:
+    image: opencti/connector-malwarebazaar-recent-additions:latest
+    networks:
+      - opencti_network
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - CONNECTOR_ID=4C334102-AB94-46C5-9ACA-57F6C3E9F954
+      - "CONNECTOR_NAME=MalwareBazaar Recent Additions"
+      - CONNECTOR_LOG_LEVEL=error
+      - MALWAREBAZAAR_RECENT_ADDITIONS_API_URL=https://mb-api.abuse.ch/api/v1/
+      - MALWAREBAZAAR_RECENT_ADDITIONS_COOLDOWN_SECONDS=300 # Time to wait in seconds between subsequent requests
+      - MALWAREBAZAAR_RECENT_ADDITIONS_INCLUDE_TAGS=exe,dll,docm,docx,doc,xls,xlsx,xlsm,js # (Optional) Only download files if any tag matches. (Comma separated)
+      - MALWAREBAZAAR_RECENT_ADDITIONS_INCLUDE_REPORTERS= # (Optional) Only download files uploaded by these reporters. (Comma separated)
+      - MALWAREBAZAAR_RECENT_ADDITIONS_LABELS=malware-bazaar # (Optional) Labels to apply to uploaded Artifacts. (Comma separated)
+      - MALWAREBAZAAR_RECENT_ADDITIONS_LABELS_COLOR=#54483b # Color to use for labels
+    restart: always
+
+  connector-mitre:
+    image: opencti/connector-mitre:latest
+    networks:
+      - opencti_network
+    environment:
+      - OPENCTI_URL=http://opencti:8080
+      - OPENCTI_TOKEN=${OPENCTI_ADMIN_TOKEN}
+      - CONNECTOR_ID=5C554102-DE77-46C5-8787-57F6C3E9F954
+      - "CONNECTOR_NAME=MITRE Datasets"
+      - CONNECTOR_SCOPE=tool,report,malware,identity,campaign,intrusion-set,attack-pattern,course-of-action,x-mitre-data-source,x-mitre-data-component,x-mitre-matrix,x-mitre-tactic,x-mitre-collection
+      - CONNECTOR_RUN_AND_TERMINATE=false
+      - CONNECTOR_LOG_LEVEL=error
+      - MITRE_REMOVE_STATEMENT_MARKING=true
+      - MITRE_INTERVAL=4 # In days
+    depends_on:
+      opencti:
+        condition: service_healthy
+    restart: always
+
 volumes:
   esdata:
   s3data:
